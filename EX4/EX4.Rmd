@@ -1,0 +1,152 @@
+---
+title: |
+  | Applied Machine Learning in Economics
+  | Exercise 4
+author: "Nasim Gholizadeh"
+output: html_document
+---
+
+---------------------------------------------------------
+
+# Question 1 (concept)
+Suppose we collect data for a group of students in a statistics class with variables X1 = hours studied, X2 = undergrad GPA, and Y = receive an A. We fit a logistic regression and produce estimated coefficient, ˆβ0 = −6, ˆβ1 = 0.05, ˆβ2 = 1.
+
+(a) Estimate the probability that a student who studies for 40 hours and has an undergrad GPA of 3.5 gets an A in the class.
+
+(b) How many hours would the student in part (a) need to study to have a 50% chance of getting an A in the class?
+
+# Answer 1
+
+a)
+X1 = 40, X2 = 3.5
+P(X) = (e^(b0 + b1 X1 + b2 X2)) / 1 + e^(b0 + b1 X1 + b2 X2)
+P(X) = (e^(-6 + 0.05 X1 + 1 X2)) / 1 + e^(-6 + 0.05 X1 + X2) = 0.377
+
+b)
+P(X) = (e^(-6 + 0.05 X1 + 3.5)) / 1 + e^(-6 + 0.05 X1 + 3.5) = 0.5
+(e^(-6 + 0.05 X1 + 3.5)) = 0.5 + 0.5 x e^(-6 + 0.05 X1 + 3.5)
+(e^(-6 + 0.05 X1 + 3.5)) = 1, taking log : (-6 + 0.05 X1 + 3.5) = 0, 0.05 X1 = 2.5, so, X1 = 2.5/0.05 = 50
+
+# Question 2 (concept)
+Suppose that we take a data set, divide it into equally-sized training and test sets, and then try out two different classification procedures. First we use logistic regression and get an error rate of 20% on the training data and 30% on the test data. Next we use 1-nearest neighbors (i.e. K = 1) and get an average error rate (averaged over both test and training data sets) of 18%. Based on these results, which method should we prefer to use for classification of new observations? Why?
+
+# Answer 2
+
+The KNN model with K=1 fits the training set exactly, which means the training error is 0% for this classiffication method. As a result, the test error has to be 36%, in order for the average of the errors (training and test error) to be 18%. Since we are interested to label new observations, we will choose a model that has better performance on the test set. Thus, our final model choice would be the logistic regression.
+
+
+# Question 3 (concept)
+This problem has to do with odds.
+
+(a) On average, what fraction of people with an odds of 0.37 of defaulting on their credit card payment will in fact default?
+
+(b) Suppose that an individual has a 16% chance of defaulting on her credit card payment. What are the odds that she will default?
+
+# Answer 3
+
+a)
+%27 of people
+P(x)/(1-P(x)) = 0.37, so P(x) = 0.37 - (0.37 x P(x)) , so, P(x) = 0.37/1.37 = 0.27
+
+b) 
+The odds are %19.
+P(x) = 0.16
+P(x)/(1-P(x)) = 0.16/(1-0.16) = 0.19
+
+# Question 4 (applied)
+
+This question should be answered using the Weekly data set, which is part of the ISLR2 package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+
+(a) Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?
+
+(b) Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+
+(c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+
+(d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+
+# Answer 4
+
+a)
+```{r}
+suppressWarnings(library(ISLR2))
+summary(Weekly)
+```
+
+```{r}
+# Scatterplot matrices of the predictors
+pairs(Weekly[,-ncol(Weekly)], col=Weekly$Direction)
+```
+
+```{r}
+# Correlation matrix
+cor(Weekly[,-ncol(Weekly)])
+```
+
+Volume increases with respect the Year, and we can observe a strong positive correlation between them, not much to say about the rest of the pairs. Summary statistics indicates that lag variables are similar to each other and also the Today variable.
+
+b)
+```{r}
+logistic.reg <- glm(Direction ~ Lag1+Lag2+Lag3+Lag4+Lag5+Volume, data=Weekly, family=binomial)
+summary(logistic.reg)
+```
+
+The only statistically significant predictor is Lag2, as its p-value is less than 0.05.
+
+c)
+
+```{r}
+logistic.prob <- predict(logistic.reg, type="response")
+logistic.pred <- rep("Down", nrow(Weekly)) # Vector of "Down" elements
+logistic.pred[logistic.prob>0.5] <- "Up" # Change "Down" to "Up" when probability > 0.5.
+# Confusion matrix
+table(logistic.pred, Weekly$Direction)
+```
+
+```{r}
+# fraction of days for which the prediction was correct
+mean(logistic.pred == Weekly$Direction)*100 
+```
+
+Have in mind the following for this exercise:
+TP := True Positive = 557
+TN := True Negative = 54
+FP := False Positive = 430
+FN := False Negative = 48
+
+The correct prediction fraction, aka Accuracy, is the following,
+Accuracy := (TP+TN) / (TP+TN+FP+FN) = (557+54)/1089 = 56.1%.
+Training error := 1 - 56.1% = 43.9%, because training and testing sample are the same here.
+
+When the market goes up, the logistic regression does really well,
+Sensitivity := True Positive Rate(TPR) = TP / (TP+FN) = 557/(557+48) = 92.1%.
+
+However, when the market goes down, the logistic regression performs poorly,
+Specificity := 1-FPR = TN / (TN+FP) = 54/(54+430) = 11.2%.
+
+d)
+
+```{r}
+# Training sample from 1990 to 2008
+train <- Weekly[Weekly$Year<2009, ]
+
+# Test sample from 2009 to 2010
+test <- Weekly[Weekly$Year>=2009, ]
+
+# Logistic regression just on the training sample
+logistic.reg2 <- glm(Direction ~ Lag2, data=train, family=binomial)
+
+# Predictions just on the test set
+logistic.probs2 <- predict(logistic.reg2, newdata = test, type="response")
+logistic.pred2 <- rep("Down", nrow(test))
+logistic.pred2[logistic.probs2>0.5] <- "Up"
+
+# Confusion matrix
+table(logistic.pred2, test$Direction)
+```
+
+```{r}
+mean(logistic.pred2 == test$Direction)*100 
+```
+
+Now the fraction of days where the prediction was correct, Accuracy, is (9+56)/104= 62.5%.

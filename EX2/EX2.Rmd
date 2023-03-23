@@ -1,0 +1,132 @@
+---
+title: |
+  | Applied Machine Learning in Economics
+  | Exercise 2
+author: "Nasim Gholizadeh"
+output: html_document
+---
+
+---------------------------------------------------------
+
+# Question 1 (concept)
+For each of parts (a) through (d), indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.
+(a) The sample size n is extremely large, and the number of predictors p is small.
+(b) The number of predictors p is extremely large, and the number of observations n
+is small.
+(c) The relationship between the predictors and response is highly non-linear.
+(d) The variance of the error terms, V ar(), is extremely high.
+
+# Answer 1
+
+a) Better: Having large sample size, n, means we can approach the true distribution and have sufficient information for predictors p. A flexible model would fit the data better in this case.
+
+b) Worse: Here, a flexible model would likely overfit. In general, flexible methods perfom worse when we have small dataset.
+
+c) Better: Flexible methods perform better on non-linear datasets as they have more degrees of freedom to approximate a non-linear relationship between the predictors and response variable.
+
+d) Worse: In this case, a flexible method would likely overfit. Because of the high variance of the error terms, Var(ϵ), there's a high chance that the a flexible model would capture the pattern of the noise. In general, high variance of the error terms means that data points would be far from the ideal function that describes the data, f. This shows that f is more closely to linearity, so a simpler model would work better.
+
+# Question 2 (concept)
+We now revisit the bias-variance decomposition.
+(a) Provide a sketch of typical (squared) bias, variance, training mean squared error, test mean squared error, and Bayes (or irreducible) error rate curves, on a single plot, as we go from less flexible statistical learning methods towards more flexible approaches. The x-axis should represent the amount of flexibility in the method, and the y-axis should represent the values for each curve. There should be five curves. Make sure to label each one.
+(b) Explain why each of the five curves has the shape displayed in part (a).
+
+# Answer 2
+
+a)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+```
+
+```{r}
+include_graphics("EX2.png")
+```
+
+b)
+
+(squared) bias: decreases as the flexibility increases, higher flexibility will fit the data better
+
+variance: increases as the flexibility increases, higher flexibility will lead to overfitting (fitting training data too well and not generalizing to test data)
+
+training mean squared error: will continue to decrease as the flexibility increases, higher flexibility means better fitting of the training data
+
+test mean squared error (MSE): decreases to an optimum point as increased flexibility means a better fit, further flexibility will lead to overfitting
+
+Bayes (or irreducible) error rate: beyond our control, stays constant
+
+# Question 3 (concept)
+The table below provides a training data set containing six observations, three predictors,
+and one qualitative response variable
+Suppose we wish to use this data set to to make a prediction for Y when X1 = X2 = X3 = 0 using K-nearest neighbors.
+(a) Compute the Euclidean distance between each observation and the test point, X1 = X2 = X3 = 0.
+(Note: the Euclidean distance of two vectors a = (a1, a2, a3) and b = (b1, b2, b3) is given by d(a, b) =√(a1 − b1)2 + (a2 − b2)2 + (a3 − b3)2. The same idea extends to vectors with n coordinates.)
+
+Obs. X1 X2 X3 Y
+1 0 3 0 Red
+2 2 0 0 Red
+3 0 1 3 Red
+4 0 1 2 Green
+5 -1 0 1 Green
+6 1 1 1 Red
+
+(b) What is our prediction with K = 1? Why?
+(c) What is our prediction with K = 3? Why?
+(d) If the Bayes decision boundary in this problem is highly non-linear, then would we expect the best value for K to be large or small? Why?
+
+# Answer 3
+
+a)
+
+```{r}
+# create a Euclidean distance function
+ed <- function(x, y) sqrt(sum((x - y)^2))
+```
+
+```{r}
+obs_0 <- c(0,0,0)
+X <- matrix(c(0,3,0, 2,0,0, 0,1,3, 0,1,2, -1,0,1, 1,1,1), ncol = 3, byrow = T)
+colnames(X) <- c("X1", "X2", "X3")
+Y <- c("Red", "Red", "Red", "Green", "Green", "Red")
+
+Distance <- c(ed(obs_0, X[1,]), ed(obs_0, X[2,]), ed(obs_0, X[3,]), 
+              ed(obs_0, X[4,]), ed(obs_0, X[5,]), ed(obs_0, X[6,]))
+
+table <- data.frame(Obs. = c(1:6), X, Y, Distance)
+table
+```
+
+b)
+Green. K = 1, we look only at the nearest point, which is observeation 5 with distance 1.41. It is a green one, so our prediction would be green.
+
+c)
+
+Red. K = 3, here we check at the nearest three points, which are observeation 2, observeation 5, and observetion 6. Two of them are colored red and one is green, meaning the probability of the test point belonging to red is 2/3 and green is 1/3. Therefore, the prediction is red.
+
+d)
+
+The best value of K should be expected to be small given a highly non-linear Bayes decision boundary. Smaller values of K result in a more flexible KNN model, and this will produce a decision boundary that is non-linear. A larger K would mean more data points are considered by the KNN model and this means its decision boundary is closer to a linear shape.
+
+# Question 4 (concept)
+What are the advantages and disadvantages of a very flexible (versus a less flexible) approach for regression or classification? Under what circumstances might a more flexible approach be preferred to a less flexible approach? When might a less flexible approach be preferred?
+
+# Answer 4
+
+.Advantages of a very flexible approach would be a better fit for models where the ideal prediction function f is non-linear and lower bias in predictions.
+
+.Disadvantages of a very flexible approach would be the estimation of a large number of parameters, the danger of overfitting (fit exactly the training sample - follow the noise too closely), and higher variance in predictions.
+
+.A more flexible approach would be preferred when we are interested in prediction and not the interpretability of the results.
+
+.A less flexible approach would be preferred when we are interested in inference and the interpretability of the results.
+
+# Question 5 (concept)
+Describe the differences between a parametric and a non-parametric statistical learning
+approach. What are the advantages of a parametric approach to regression or classification (as opposed to a non-parametric approach)? What are its disadvantages? Describe the differences between a parametric and a non-parametric statistical learning approach.
+
+# Answer 5
+
+.A parametric approach simplifies the modeling procedure of the prediction function f to an estimation of few parameters, because it assumes a priori a form for f, for example a linear form. In general, fewer observations are required compared to a non-parametric approach. These models are more interpretable, and so will be preferred when we are interested in making inferences or the interpretability of the results.
+
+.A non-parametric approach does not assume a functional form for f, as a result it requires a very large number of observations to accurately estimate f. These models are more complex and less interpretable, but can lead to more accurate predictions if the underlying true function f is complicated enough.
+

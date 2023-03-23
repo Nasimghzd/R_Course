@@ -1,0 +1,185 @@
+---
+title: |
+  | Applied Machine Learning in Economics
+  | Exercise 3
+author: "Nasim Gholizadeh"
+output: html_document
+---
+
+---------------------------------------------------------
+
+# Question 1 (concept)
+Suppose we have a data set with five predictors, X1 = GPA, X2 = IQ, X3 = Level (1 for College and 0 for High School), X4 = Interaction between GPA and IQ, and X5 = Interaction between GPA and Level. The response is starting salary after graduation (in thousands of dollars). Suppose we use least squares to fit the model, and get ˆβ0 = 50,ˆβ1 = 20, ˆβ2 = 0.07, ˆβ3 = 35, ˆβ4 = 0.01, ˆβ5 = −10.
+(a) Which answer is correct, and why?
+i. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates.
+ii. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates.
+iii. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates provided that the GPA is high enough.
+iv. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates provided that the GPA is high enough.
+(b) Predict the salary of a college graduate with IQ of 110 and a GPA of 4.0.
+(c) True or false: Since the coefficient for the GPA/IQ interaction term is very small, there is very little evidence of an interaction effect. Justify your answer.
+
+# Answer 1
+
+a)
+ŷ= 50+20×GPA+0.07×IQ+35×Level+0.01×GPA×IQ−10×GPA×Level
+College(Level = 1) : 50+20k1+0.07k2+35+0.01(k1×k2)−10k1
+Highschool(Level = 0) : 50+20k1+0.07k2+0.01(k1×k2)
+
+Only (iii) is correct. The difference of College versus High School is 35−10k1 which is negative for k1>3.5. As a result, with high enough GPA (>3.5), high school graduates earn more, on average, than college graduates.
+
+b) y(Level = 1,IQ = 110,GPA = 4)= 50 + 20×4.0+0.07×110 + 0.01×4×110 = 137.1
+
+c) False. We must examine the p-value of the regression coefficient to determine if the interaction term is statistically significant or not.
+
+# Question 2 (concept)
+In this exercise you will create some simulated data and will fit simple linear regression models to it. Make sure to use the command set.seed(1) prior to starting part (a) to ensure consistent and reproducible results.
+
+(a) Using the rnorm() function, create a vector, x, containing 100 observations drawn from a N (0, 1) distribution. This represents a feature, X.
+(b) Using the rnorm() function, create a vector, eps, containing 100 observations drawn from a N (0, 0.25) distribution – a normal distribution with mean zero and variance 0.25. (To ensure consistency, issue the ?rnorm to check the syntax of the command.)
+(c) Using x and eps, generate a vector y according to the model Y = −1 + 0.5X + e. What is the length of the vector y? What are the values of β0 and β1 in this linear model?
+(d) Create a scatterplot displaying the relationship between x and y. Comment on what you observe.
+(e) Fit a least squares linear model to predict y using x. Comment on the model obtained. How do ˆβ0 and ˆβ1 compare to β0 and β1?
+(f) Display the least squares line on the scatterplot obtained in (d). Draw the population regression line on the plot, in a different color. Use the legend() command to create an appropriate legend.
+(g) Now fit a polynomial regression model that predicts y using x and x2. Is there evidence that the quadratic term improves the model fit? Explain your answer. (Hint: in R, given a predictor X we can create the squared term by entering I(X^2).)
+(h) (concept question - no computation is required) Assume a data set generated from a simple linear model, for instance, according to the model in (c). Consider the training M SE1 from fitting the linear regression Y = β0 + β1X + e, and the training M SE2 from fitting the quadratic regression Y = β0 + β1X + β2X2 + e.
+Which of the two training MSEs, if any, will be smaller? Justify your answer.
+(i) (concept question - no computation is required) Answer (h) for test M SE rather than training MSE.
+
+# Answer 2
+
+a, b, c)
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100, sd = sqrt(0.25))
+y <- -1 + 0.5 * x + eps
+length(y)
+```
+
+d, e, f)
+
+```{r}
+plot(y~x, main= 'Scatter plot of x against y', col='red')
+# Linear regression line.
+lm.fit <- lm(y~x)
+summary(lm.fit)
+```
+
+```{r}
+plot(x, y)
+abline(lm.fit, lwd=1, col ="blue")
+# Population regression line and legends.
+abline(a=-1,b=0.5, lwd=1, col="red")
+legend('bottomright', bty='n', legend=c('Least Squares Line', 'Population Line'),
+col=c('blue','red'), lty = c(1, 1))
+```
+
+.A positive linear relationship exists between x and y, with added variance introduced by the error terms.
+.The regression estimates are very close to the true values. This is further confirmed by the fact that the regression and population lines are very close to each other. P-values are near zero and F-statistic is large so null hypothesis can be rejected.
+
+g)
+
+```{r}
+fit.q <- lm(y ~ x + I(x^2))
+summary(fit.q)
+```
+The quadratic term does not improve the model fit substantially. RSE and Rsq are almost the same (they have a minimal increase) while the p-value of X^2 is quite high showing that the squared term is insignificant. The additional term improves the RSS and the Rsq. This is overfitting due to increased flexibility.
+
+h) With more regressors, the quadratic model will have no-larger training MSE than the simple linear regression, MSE2(train)≤MSE1(train). The reason is that RSS1 cannot be smaller than RSS2. (Don't forget that RSS=n×MSE)
+
+i) Since the simple linear regression is the true model, the test MSE for the linear regression cannot be larger than the test MSE for the quadratic which will overfit the data, MSE1(test)≤MSE2(test). More specifically, the test MSE will be minimum (optimal) for the simple linear regression.
+
+
+# Question 3 (applied)
+This question should be answered using the Carseats data set. (Hint: the Carseats data set is used in Lab of chapter 3, section 3.6.6 of the ISLR text.) The Carseats data set is in the package ISLR2, which includes all data sets provided by the textbook. Before starting your data analysis in R, make sure that you attach the ISLR2 package with the command library(). You need to issue this command every time you invoke R and want to analyze one of the data sets included in ISLR2 package.
+> library(ISLR2)
+
+The first time you want to use the library, R will complain that the package has not been installed. Rstudio will ask you to install this by clicking on a button. Alternatively, you can install the package manually by issuing the command 
+> install.packages("ISLR2")
+
+(a) Look at the data using the View() function. Notice that there are some qualitative variables with two or more levels.
+(b) Fit a multiple regression model to predict Sales using US, ShelveLoc, Price, CompPrice, and the interaction term Price×CompPrice.
+(c) Write out the model in equation form, being careful to handle the qualitative variables properly.
+In particular, for the predictor ShelveLoc that indicated the quality of the shelving location, use the command
+> contrasts(ShelveLoc)
+
+to see the coding that R uses for the dummy variables and report which category is the baseline category (Hint: see text p120).
+(d) Provide an interpretation of each coefficient in the model. Be careful—some of the variables in the model are qualitative!
+(e) Test the hypothesis that all predictors simultaneously are not associated with Sales.
+(f) For which of the predictors can you reject the null hypothesis H0 : βj = 0?
+(g) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
+(h) How well do the models in (b) and (f) fit the data? Explain using, primarily, the RSE and R2 statistics.
+(i) Using the model from (f), obtain 95% confidence intervals for the coefficient(s).
+
+
+# Answer 3
+
+a)
+
+```{r}
+library(ISLR2)
+```
+
+```{r}
+# View(Carseats)
+head(Carseats)
+```
+
+b)
+```{r}
+fit.car1 <- lm(Sales ~ US + ShelveLoc + Price + CompPrice + Price:CompPrice, data = Carseats)
+summary(fit.car1)
+```
+
+c)
+
+```{r}
+contrasts(Carseats$ShelveLoc)
+```
+
+```{r}
+contrasts(Carseats$US)
+```
+
+Sales=5.9476 + 1.0702×USYes + 4.7901×ShelveLocGood + 1.8389×ShelveLocMedium − 0.1082×Price + 0.0757×CompPrice + 0.0001×CompPrice×Price
+
+d)
+
+1.0701778:
+On average, a store in the US will make 1.0701778 more unit sale of car seats than a store that is not in the US, holding other variables fixed.
+
+4.7900970 & 1.8389298:
+On average, the bad quality of the shelving location will make 1.8389298 less unit sale car seats compared to medium quality and 4.7900970 less unit sale compare to good quality, holding other variables constant. On average, the medium quality of the shelving location will make 2.951167 less unit sale car seats compared to good quality and 1.8389298 more unit sale compare to bad quality, holding other variables constant. On average, the good quality of the shelving location will make 4.7900970 less unit sale car seats compared to medium quality and 2.951167 more unit sale compare to medium quality, holding other variables constant.
+
+-0.1082077 & 0.0001297:
+On average, every $1 increase in price of the company is associated with a change in sales of car seats by (−0.1082+0.0001×CompPrice) holding other variables (Shelve location and store location) constant. The quantitative relationship of Sales and Price is not constant but it depends on CompPrice.
+
+0.0756914 & 0.0001297:
+On average, every $1 increase in price of the competitor company is associated with a change in sales of car seats by (0.0757+0.0001×Price) holding other variables (Shelve location and store location) constant. The quantitative relationship of Sales and CompPrice is not constant but it depends on Price.
+
+e) 
+
+To determine if there is a jointly statistically significant relationship between our predictor variables and the response variable, Sales, we look at the F-statistic of the model and the corresponding p-value. Since the p-value is less than 1%, we can reject the null hypothesis: H0:β1 = β2 = ⋯ = βp = 0 . In other words, our predictors have a jointly statistically significant relationship with Sales.
+
+f)
+
+Based on the p-values that are less than 0.001, we can reject the hypothesis H0:βj=0 and conclude that the independent variables that are statistically significant at a 0.1% significance level are: USYes, ShelveLocGood, ShelveLocMedium, Price, and CompPrice.
+
+g)
+
+```{r}
+fit.car2 <- lm(Sales ~ US + ShelveLoc + Price + CompPrice, data = Carseats)
+summary(fit.car2)
+```
+
+h) 
+
+By looking at the R^2 statistics and RSE, we find those two models are quite similar as they have R^2 = 0.7313 and R^2 = 0.7308. At the same time, the RSEs for two model are 1.475 and 1.474 respectively. Concluding, these statistics show two models are doing decent job in predicting the sales.
+
+For RSE, the new model has a RSE of 1.474 , which is a little bit less than 1.475 for the one in part b). The R^2 of the new model is 0.7308, compare to 0.7313 of the model in par b), it is also a little bit less. In that case, they both fit the data well since they both explain 73% of the variables in sales with a relatively small RSE.
+
+i)
+```{r}
+confint(fit.car2)[-1,]
+```
+
