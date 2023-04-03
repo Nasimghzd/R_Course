@@ -1,0 +1,226 @@
+---
+title: |
+  | Applied Machine Learning in Economics
+  | Problem set 5
+author: "Nasim Gholizadeh(nasimg2)"
+output: html_document
+---
+
+---------------------------------------------------------
+
+# Question 1 (concept)
+
+We perform best subset, forward stepwise, and backward stepwise selection on a single data set. For each approach, we obtain p + 1 models, containing 0, 1, 2, . . . , p predictors.
+Explain your answers:
+
+(a) Which of the three models with k predictors has the smallest training RSS?
+
+(b) Which of the three models with k predictors has the smallest test RSS?
+
+(c) True or False:
+
+i. The predictors in the k-variable model identified by forward stepwise are a subset of the predictors in the (k + 1)-variable model identified by forward stepwise selection.
+
+ii. The predictors in the k-variable model identified by backward stepwise are a subset of the predictors in the (k + 1)-variable model identified by backward stepwise selection.
+
+iii. The predictors in the k-variable model identified by backward stepwise are a subset of the predictors in the (k + 1)-variable model identified by forward stepwise selection.
+
+iv. The predictors in the k-variable model identified by forward stepwise are a subset of the predictors in the (k + 1)-variable model identified by backward stepwise selection.
+
+v. The predictors in the k-variable model identified by best subset are a subset of the predictors in the (k + 1)-variable model identified by best subset selection.
+
+# Answer 1
+a)
+
+Best subset has the smallest training RSS with k predictors, because best subset considers all of the models considered by the stepwise selection methods.
+
+b)
+
+We cannot say for sure. Best subset might overfit if n is relativly small compared to p. But for any particular testing set, either of them might be best.
+
+ci) 
+
+True. At k+1, forward selection has added a new predictor to those at k.
+
+cii)
+
+True. At k, backward selection has deleted a predictor from those at k+1.
+
+ciii)
+
+False. The models at any k for forward and backward selection do not necessarily have overlap.
+
+civ)
+
+False, for the same reasoning as in (iii).
+
+cv)
+
+False. Predictors used at k may be completely different from predictors used at k+1.
+
+# Question 2 (concept)
+
+For parts (a) through (c), indicate which of i. through iv. is correct. Justify your answer.
+
+(a) The lasso, relative to least squares, is:
+
+i. More flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance.
+
+ii. More flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.
+
+iii. Less flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance.
+
+iv. Less flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.
+
+(b) Repeat (a) for ridge regression relative to least squares.
+
+(c) Repeat (a) for non-linear methods relative to least squares.
+
+# Answer 2
+
+a)
+
+iii. Lasso’s solution can have a reduction in variance at the expense of small increase in bias while least squares estimates have high variance. Lasso can shrink coefficient estimates, removing non-essential variables for less variance and higher bias. The lasso is a more restrictive model, and thus it has the possibility of reducing overfitting and variance in predictions. As long as it does not result in too high of a bias due to its added constraints, it will outperform least squares.
+
+b)
+
+iii. Like Lasso, ridge can shrink the coefficient estimates, decreasing variance with higher bias. Ridge is less flexible than the least squares. The same reason as above.
+
+c)
+
+ii. Non-linear models are more flexible and have less bias than least squares.
+
+# Question 3 (applied)
+
+In this exercise, we will generate simulated data, and will then use this data to perform best subset selection. (Hint: To be able to reproduce your results, do not forget to set the seed in your randomization using the command set.seed().)
+
+(a) Use the rnorm() function to generate a predictor X of length n = 100, as well as a noise vector e of length n = 100.
+
+(b) Generate a response vector Y of length n = 100 according to the model Y = β0 + β1X + β2X^2 + β3X^3 + e, where β0, β1, β2, β3 are constants of your choice.
+
+(c) Use the regsubsets() function to perform (exhaustive or global) best subset selection in order to choose the best model containing the predictors X, X2, . . . , X10.
+What is the best model obtained according to Cp, BIC, and adjusted R^2? Show some plots to provide evidence for your answer, and report the coefficients of the best model obtained. Note you will need to use the data.frame() function to create a single data set containing both X and Y.
+
+(d) Repeat (c), using forward stepwise selection and also using backwards stepwise selection. How does your answer compare to the results in (c)?
+
+(e) Repeat (c), that is use the regsubsets() function to perform (exhaustive or global) best subset selection in order to choose the best model containing the predictors X, X2, . . . , X10. What is the best model obtained according to 10-fold cross-validation?
+
+
+# Answer 3
+
+a)
+
+```{r}
+set.seed(1)
+X <- rnorm(100)
+e <- rnorm(100)
+```
+
+b)
+
+```{r}
+B0 <- -4
+B1 <- 3
+B2 <- -2
+B3 <- 1
+Y <- B0 + B1*X + B2*X^2 + B3*X^3 + e
+```
+
+c)
+
+```{r}
+library(leaps)
+data.full = data.frame(Y, X)
+regfit.full = regsubsets(Y~poly(X,10,raw=T), data=data.frame(Y,X), nvmax=10)
+summary = summary(regfit.full)
+par(mfrow=c(2,2))
+plot(summary$cp, xlab ="Number of variables", ylab="C_p", type="l")
+points(which.min(summary$cp), summary$cp[which.min(summary$cp)], col = "red", cex = 2, pch = 20)
+plot(summary$bic, xlab ="Number of variables", ylab="BIC", type="l")
+points(which.min(summary$bic), summary$bic[which.min(summary$bic)], col = "red", cex = 2, pch = 20)
+plot(summary$adjr2, xlab ="Number of variables", ylab="Adjusted R^2", type="l")
+points(which.max(summary$adjr2), summary$adjr2[which.max(summary$adjr2)], col = "red", cex = 2, pch = 20)
+```
+
+The best model according to Cp and Adjusted R^2 has 4 variables, and according to BIC, 3 variables (BIC penalizes large models and therefore tends to choose smaller models).
+
+```{r}
+coef(regfit.full, 4)
+```
+
+d)
+
+```{r}
+library(leaps)
+data.full = data.frame(Y, X)
+regfit.fwd = regsubsets(Y~poly(X,10,raw=T), data=data.frame(Y,X), nvmax=10, method="forward")
+summary = summary(regfit.fwd)
+par(mfrow=c(2,2))
+plot(summary$cp, xlab ="Number of variables", ylab="C_p", type="l")
+points(which.min(summary$cp), summary$cp[which.min(summary$cp)], col = "red", cex = 2, pch = 20)
+plot(summary$bic, xlab ="Number of variables", ylab="BIC", type="l")
+points(which.min(summary$bic), summary$bic[which.min(summary$bic)], col = "red", cex = 2, pch = 20)
+plot(summary$adjr2, xlab ="Number of variables", ylab="Adjusted R^2", type="l")
+points(which.max(summary$adjr2), summary$adjr2[which.max(summary$adjr2)], col = "red", cex = 2, pch = 20)
+```
+
+```{r}
+library(leaps)
+data.full = data.frame(Y, X)
+regfit.back = regsubsets(Y~poly(X,10,raw=T), data=data.frame(Y,X), nvmax=10, method="backward")
+summary = summary(regfit.back)
+par(mfrow=c(2,2))
+plot(summary$cp, xlab ="Number of variables", ylab="C_p", type="l")
+points(which.min(summary$cp), summary$cp[which.min(summary$cp)], col = "red", cex = 2, pch = 20)
+plot(summary$bic, xlab ="Number of variables", ylab="BIC", type="l")
+points(which.min(summary$bic), summary$bic[which.min(summary$bic)], col = "red", cex = 2, pch = 20)
+plot(summary$adjr2, xlab ="Number of variables", ylab="Adjusted R^2", type="l")
+points(which.max(summary$adjr2), summary$adjr2[which.max(summary$adjr2)], col = "red", cex = 2, pch = 20)
+```
+
+
+```{r}
+coef(regfit.full, which.max(summary(regfit.full)$adjr2))
+```
+
+```{r}
+coef(regfit.fwd, which.max(summary(regfit.fwd)$adjr2))
+```
+
+```{r}
+coef(regfit.back, which.max(summary(regfit.back)$adjr2))
+```
+
+Cp and Adjusted R^2 pick models with 4 variables while BIC picks a model with 3 variables.
+One difference is that with forward selection and Adjusted R^2 we have X^5 over x^7.
+
+e)
+
+library(leaps)
+k <- 10
+n <- nrow(data.frame(Y, X))
+set.seed(1)
+folds <- sample(rep(1:k, length = n))
+cv.errors <- matrix(NA, k, 19,
+    dimnames = list(NULL, paste(1:19)))
+###
+for (j in 1:k) {
+  best.fit <- regsubsets(Y ~ .,
+       data = data.frame(Y, X)[folds != j, ],
+       nvmax = 19)
+  for (i in 1:19) {
+    pred <- predict(best.fit, data.frame(Y, X)[folds == j, ], id = i)
+    cv.errors[j, i] <-
+         mean((data.frame(Y, X)$Y[folds == j] - pred)^2)
+   }
+ }
+###
+mean.cv.errors <- apply(cv.errors, 2, mean)
+mean.cv.errors
+par(mfrow = c(1, 1))
+plot(mean.cv.errors, type = "b")
+###
+reg.best <- regsubsets(Y ~ ., data = data.frame,
+    nvmax = 19)
+coef(reg.best, 19)
+
